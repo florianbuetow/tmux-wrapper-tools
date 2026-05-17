@@ -2,9 +2,9 @@
 
 Two small tmux helpers for managing many sessions at once:
 
-- **[Watcher](#usage)** — open N terminals and each one auto-attaches to a
+- **[`watcher`](#usage)** - open N terminals and each one auto-attaches to a
   different existing tmux session (newest first). No manual session-picking.
-- **[`wrap`](#wrap-per-directory-tmux-sessions)** — a zsh function that
+- **[`wrap`](#wrap-per-directory-tmux-sessions)** - a zsh function that
   creates sessions named `WRAP-*` so agents and other automation can find
   them with `tmux ls | grep '^WRAP-'` and remote-control them by name.
 
@@ -12,7 +12,7 @@ Two small tmux helpers for managing many sessions at once:
 
 - `tmux`
 - `flock` (on macOS: `brew install flock`)
-- `just` (optional, for the `just` interface — on macOS: `brew install just`)
+- `just` (optional, for the `just` interface - on macOS: `brew install just`)
 
 ## Usage
 
@@ -28,7 +28,7 @@ Run the watcher in a terminal:
 just attach
 ```
 
-Open additional terminals and run the same command — each one attaches to the
+Open additional terminals and run the same command - each one attaches to the
 next-newest session.
 
 Check which sessions are under watch:
@@ -49,28 +49,28 @@ just cleanup
 
 The `just` targets wrap four scripts you can also invoke directly:
 
-- `auto-attach.sh` — one-shot. Captures the current `status.sh` output, clears
+- `auto-attach.sh` - one-shot. Captures the current `status.sh` output, clears
   the screen, prints it, then lists tmux sessions sorted by creation time
   (newest first) and attaches to the first one no other watcher has locked.
   Uses `flock` files under `./LOCKS/` for mutual exclusion. Sleeps a random
-  0–199 ms after detaching (so racing watchers don't collide), and
+  0-199 ms after detaching (so racing watchers don't collide), and
   `RETRY_SECS` seconds (default 3) when no session was available.
-- `loop.sh` — checks that `flock` is installed, then repeatedly re-runs
+- `loop.sh` - checks that `flock` is installed, then repeatedly re-runs
   `auto-attach.sh`. All inter-attempt pacing and screen clearing lives in
   `auto-attach.sh` (the clear happens *after* the next status frame is
   buffered, so the screen never goes blank between iterations).
-- `status.sh` — renders the status table to stdout (no looping, no header).
+- `status.sh` - renders the status table to stdout (no looping, no header).
   Used by both `just status` and `auto-attach.sh`. Columns: Session Name,
   Path (rendered relative to `~` when inside `$HOME`), Watching, Attached,
   Created (`YYYY-MM-DD HH:MM:SS`).
-- `cleanup.sh` — removes every lockfile in `./LOCKS/` whose name no longer
+- `cleanup.sh` - removes every lockfile in `./LOCKS/` whose name no longer
   matches an active tmux session (after the same sanitization the watcher
   applies). Prints one line per file (`kept` / `removed` / `held`) and a
   count summary. Two safety layers run before any deletion: the lockfile's
   key must not match an active session, and `flock -n` must succeed against
   the file (no other process holds it). If `tmux list-sessions` fails for
   any reason other than "no server running", cleanup exits non-zero without
-  deleting anything — earlier behavior treated that case as "every lock is
+  deleting anything - earlier behavior treated that case as "every lock is
   orphaned" and could destroy live locks.
 
 ## How the locking works
@@ -79,7 +79,7 @@ For each session name, the watcher opens `LOCKS/<sanitized-name>` and tries
 `flock -n` on it. The lock is held only while that terminal is attached, so
 when a session is detached or killed, the slot frees up for the next watcher.
 
-The sanitization is `tr -c 'a-zA-Z0-9._-' '_'` — anything outside that
+The sanitization is `tr -c 'a-zA-Z0-9._-' '_'` - anything outside that
 character class becomes `_`. This is **lossy**: distinct session names that
 differ only in those characters (e.g. `my session` and `my_session`, or
 `a/b` and `a_b`) collapse to the same lock key and therefore share a single
@@ -89,10 +89,10 @@ need them to be watched in parallel, name them so they differ in
 
 `just status` reflects two independent states:
 
-- **Watching** — a live `flock -n` probe against `LOCKS/<key>`. `yes` means
+- **Watching** - a live `flock -n` probe against `LOCKS/<key>`. `yes` means
   a watcher process is currently inside `tmux attach` for this session;
   `-` means no flock is held.
-- **Attached** — tmux's own `#{session_attached}` count. `yes` means at
+- **Attached** - tmux's own `#{session_attached}` count. `yes` means at
   least one tmux client (the watcher or a manual `tmux attach`) is
   connected; `-` means none.
 
@@ -148,7 +148,7 @@ across all wrap sessions.
 
 ### Requirements
 
-- `zsh` — uses zsh-specific syntax (`${match[N]}` regex captures, `local
+- `zsh` - uses zsh-specific syntax (`${match[N]}` regex captures, `local
   -A` associative arrays, `read "var?prompt"`); will not run in bash
   without modification.
 - `tmux`.
