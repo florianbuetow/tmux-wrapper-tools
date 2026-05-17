@@ -1,4 +1,4 @@
-# TMUX Watcher - Auto attach to new tmux sessions
+# Tmux Auto Attach
 
 Two small tmux helpers for managing many sessions at once:
 
@@ -119,8 +119,8 @@ tmux ls | grep '^WRAP-'
 `~/.zshrc`:
 
 ```sh
-[ -f "$HOME/path/to/tmux-watchdog-tools/wrapfunc.sh" ] && \
-    source "$HOME/path/to/tmux-watchdog-tools/wrapfunc.sh"
+[ -f "$HOME/path/to/tmux-auto-attach/wrapfunc.sh" ] && \
+    source "$HOME/path/to/tmux-auto-attach/wrapfunc.sh"
 ```
 
 Adjust the path to wherever you cloned the repo. Reopen your shell or run
