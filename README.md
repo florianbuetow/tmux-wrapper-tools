@@ -1,11 +1,11 @@
 # Tmux Auto Attach
 
-Three small tmux helpers for managing many sessions at once:
+Two small tmux helpers for managing many sessions at once:
 
 - **[`watcher`](#usage)** - auto-attaches each terminal to a different
-  unattached tmux session (newest first). No manual session-picking.
-- **[`status`](#usage)** - shows a live table of all tmux sessions with
-  their watch and attachment state.
+  unattached tmux session (newest first) via `just attach`, and shows a
+  live status table of all sessions via `just status`. No manual
+  session-picking.
 - **[`wrap`](#wrap-per-directory-tmux-sessions)** - a zsh function that
   creates sessions named `WRAP-*` so agents and other automation can find
   them with `tmux ls | grep '^WRAP-'` and remote-control them by name.
