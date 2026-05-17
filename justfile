@@ -32,6 +32,9 @@
 #    - init/destroy/clean/help on top, ci and other tests on the bottom, between other groups
 # =============================================================================
 
+# Number of stale (non-existing) sessions that triggers an automatic clean in the status loop
+CLEANING_THRESHOLD := "8"
+
 # Default recipe: show available commands
 _default:
     @just help
@@ -99,6 +102,7 @@ status interval="10":
     set -e
     once=""
     secs="{{interval}}"
+    threshold="{{CLEANING_THRESHOLD}}"
     if [ "$secs" = "once" ]; then
         once=yes
     elif ! [[ "$secs" =~ ^[0-9]+$ ]] || [ "$secs" -lt 1 ]; then
@@ -111,6 +115,29 @@ status interval="10":
         echo ""
         printf '%s\n' "$rendered"
         echo ""
+
+        # Count stale lockfiles; auto-clean when threshold is reached
+        active_keys=$(tmux list-sessions -F '#{session_name}' 2>/dev/null \
+            | while IFS= read -r n; do printf '%s\n' "$(printf '%s' "$n" | tr -c 'a-zA-Z0-9._-' '_')"; done || true)
+        stale_count=0
+        if [ -d LOCKS ]; then
+            shopt -s nullglob
+            for lockfile in LOCKS/*; do
+                [ -f "$lockfile" ] || continue
+                key=$(basename "$lockfile")
+                if [ -z "$active_keys" ] || ! printf '%s\n' "$active_keys" | grep -Fxq "$key"; then
+                    stale_count=$((stale_count + 1))
+                fi
+            done
+            shopt -u nullglob
+        fi
+        if [ "$stale_count" -ge "$threshold" ]; then
+            printf "\033[0;33m⚠ %d stale session(s) reached threshold %d — running clean\033[0m\n" "$stale_count" "$threshold"
+            echo ""
+            ./cleanup.sh
+            echo ""
+        fi
+
         if [ -n "$once" ]; then
             printf "\033[0;32m✓ status completed successfully\033[0m\n"
             echo ""

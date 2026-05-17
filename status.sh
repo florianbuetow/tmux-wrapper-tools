@@ -139,11 +139,15 @@ render_row() {
     local att_mark=$(centered_mark "$att_sym" "$att_w")
     local name_padded=$(printf '%-*s' "$name_w" "$name")
     local path_padded=$(printf '%-*s' "$path_w" "$path")
+    local created_padded=$(printf '%-*s' "$created_w" "$created")
     if [ "$grey" = yes ]; then
         name_padded=$(printf '\033[0;90m%s\033[0m' "$name_padded")
         path_padded=$(printf '\033[0;90m%s\033[0m' "$path_padded")
+        watch_mark=$(printf '\033[0;90m%s\033[0m' "$watch_mark")
+        att_mark=$(printf '\033[0;90m%s\033[0m' "$att_mark")
+        created_padded=$(printf '\033[0;90m%s\033[0m' "$created_padded")
     fi
-    printf "│ %s │ %s │ %s │ %s │ %-*s │\n" "$name_padded" "$path_padded" "$watch_mark" "$att_mark" "$created_w" "$created"
+    printf "│ %s │ %s │ %s │ %s │ %s │\n" "$name_padded" "$path_padded" "$watch_mark" "$att_mark" "$created_padded"
 }
 
 if [ -n "$sessions" ]; then
