@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CLEANING_THRESHOLD` variable in `just status` triggers auto-clean when stale session count is reached.
+
+### Changed
+
+- Stale session rows now grey out all columns, not just session name and path.
+
 ## 2026-05-17
 
 ### Added
