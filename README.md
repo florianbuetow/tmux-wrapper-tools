@@ -6,6 +6,11 @@ the N most-recently-created sessions. Watchers coordinate via `flock`-held
 files in `./LOCKS/`; see [How the locking works](#how-the-locking-works) for
 the exact guarantees and the lossy-sanitization caveat on session names.
 
+The repo also ships [`wrapfunc.sh`](#wrap-per-directory-tmux-sessions), a zsh
+helper that creates tmux sessions whose names start with `WRAP-` so external
+automation (e.g. agents) can find and remote-control them with
+`tmux ls | grep '^WRAP-'`.
+
 ## Requirements
 
 - `tmux`
@@ -84,3 +89,61 @@ need them to be watched in parallel, name them so they differ in
 `tmux list-sessions`; greyed rows are stale lockfiles whose tmux session no
 longer exists (and which `just cleanup` will remove on its next run,
 provided no process still holds the flock).
+
+## Wrap (per-directory tmux sessions)
+
+`wrapfunc.sh` defines a zsh function `wrap` that spawns and manages tmux
+sessions named `WRAP-[N]-<dir>`, where `<dir>` is the current working
+directory (with `$HOME` rewritten to `~` and `.` characters replaced by `_`
+to match tmux's own session-name normalization). The numeric index `N`
+auto-increments across all wrap sessions globally, so every new wrap
+session gets a unique name regardless of directory.
+
+The `WRAP-` prefix is the point: it makes these sessions trivially
+discoverable from outside the terminal. An agent or any external
+automation can find them with:
+
+```sh
+tmux ls | grep '^WRAP-'
+```
+
+and then attach, send keys, or otherwise remote-control them by name. The
+auto-attach watcher above doesn't care about session names; `wrap` just
+gives you a naming convention so external tooling can locate sessions by
+`grep`.
+
+### Install
+
+`wrapfunc.sh` is a sourced library, not a runnable script. Add this line
+to your `~/.zshrc`:
+
+```sh
+[ -f "$HOME/path/to/tmux-wrapper-tools/wrapfunc.sh" ] && \
+    source "$HOME/path/to/tmux-wrapper-tools/wrapfunc.sh"
+```
+
+Adjust the path to wherever you cloned the repo. Reopen your shell or run
+`source ~/.zshrc` to load the function.
+
+### Requirements
+
+- `zsh` — the function uses zsh-specific syntax (`${match[N]}` regex
+  captures, `local -A` associative arrays, `read "var?prompt"`). It will
+  not work in bash without modification.
+- `tmux`.
+
+### Usage
+
+```sh
+wrap            # list all wrap sessions, show usage
+wrap new        # create a new wrap session for $PWD (refuses inside tmux)
+wrap -r        # reattach to (or `switch-client` to) a wrap session for $PWD
+wrap -d        # kill a wrap session for $PWD
+```
+
+`wrap -r` and `wrap -d` filter the candidate list by the current working
+directory: only sessions whose embedded `<dir>` matches `$PWD` are offered.
+If exactly one match exists, `wrap -r` attaches directly; otherwise it
+prompts for the session number. `wrap new` refuses to run from inside an
+existing tmux session — detach first, or use `wrap -r` to switch between
+wrap sessions while attached.
