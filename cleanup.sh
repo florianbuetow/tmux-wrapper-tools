@@ -5,12 +5,12 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCK_DIR="$HERE/LOCKS"
 
 if [ ! -d "$LOCK_DIR" ]; then
-    echo "no lock folder ($LOCK_DIR) — nothing to clean"
+    echo "no lock folder ($LOCK_DIR) - nothing to clean"
     exit 0
 fi
 
 # Enumerate active sessions. Distinguish "tmux has no server running"
-# (legitimate cleanup target — empty active set) from any other tmux
+# (legitimate cleanup target - empty active set) from any other tmux
 # failure (must NOT delete anything: an empty active set would otherwise
 # look like every lock is orphaned and we'd delete locks held by live
 # watchers attached on a different socket).

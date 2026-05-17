@@ -47,16 +47,22 @@ just cleanup
 
 ## Scripts
 
-The `just` targets wrap three scripts you can also invoke directly:
+The `just` targets wrap four scripts you can also invoke directly:
 
-- `auto-attach.sh` — one-shot. Lists tmux sessions sorted by creation time
+- `auto-attach.sh` — one-shot. Captures the current `status.sh` output, clears
+  the screen, prints it, then lists tmux sessions sorted by creation time
   (newest first) and attaches to the first one no other watcher has locked.
   Uses `flock` files under `./LOCKS/` for mutual exclusion. Sleeps a random
-  0–199 ms after detaching from a session (so multiple watchers racing for
-  the next free slot don't collide), and 3 s when no session was available.
-- `loop.sh` — checks that `flock` is installed, then repeatedly clears the
-  screen and re-runs `auto-attach.sh`. All inter-attempt pacing lives in
-  `auto-attach.sh`; the loop itself doesn't sleep.
+  0–199 ms after detaching (so racing watchers don't collide), and
+  `RETRY_SECS` seconds (default 3) when no session was available.
+- `loop.sh` — checks that `flock` is installed, then repeatedly re-runs
+  `auto-attach.sh`. All inter-attempt pacing and screen clearing lives in
+  `auto-attach.sh` (the clear happens *after* the next status frame is
+  buffered, so the screen never goes blank between iterations).
+- `status.sh` — renders the status table to stdout (no looping, no header).
+  Used by both `just status` and `auto-attach.sh`. Columns: Session Name,
+  Path (rendered relative to `~` when inside `$HOME`), Watching, Attached,
+  Created (`YYYY-MM-DD HH:MM:SS`).
 - `cleanup.sh` — removes every lockfile in `./LOCKS/` whose name no longer
   matches an active tmux session (after the same sanitization the watcher
   applies). Prints one line per file (`kept` / `removed` / `held`) and a
@@ -81,11 +87,20 @@ lock. Two watchers can never attach to such a pair concurrently. If you
 need them to be watched in parallel, name them so they differ in
 `[A-Za-z0-9._-]` characters.
 
-`just status` reflects the lock state directly: the ✅ column is a live
-`flock -n` probe against the lockfile. Sessions in normal color come from
-`tmux list-sessions`; greyed rows are stale lockfiles whose tmux session no
-longer exists (and which `just cleanup` will remove on its next run,
-provided no process still holds the flock).
+`just status` reflects two independent states:
+
+- **Watching** — a live `flock -n` probe against `LOCKS/<key>`. `yes` means
+  a watcher process is currently inside `tmux attach` for this session;
+  `-` means no flock is held.
+- **Attached** — tmux's own `#{session_attached}` count. `yes` means at
+  least one tmux client (the watcher or a manual `tmux attach`) is
+  connected; `-` means none.
+
+They usually agree, but disagree when you attach manually (Attached=yes,
+Watching=-) or when a watcher is mid-iteration outside its `tmux attach`.
+Sessions in normal color come from `tmux list-sessions`; greyed rows are
+stale lockfiles whose tmux session no longer exists (and which `just cleanup`
+will remove on its next run, provided no process still holds the flock).
 
 ## Wrap (per-directory tmux sessions)
 
@@ -104,8 +119,8 @@ tmux ls | grep '^WRAP-'
 `~/.zshrc`:
 
 ```sh
-[ -f "$HOME/path/to/tmux-wrapper-tools/wrapfunc.sh" ] && \
-    source "$HOME/path/to/tmux-wrapper-tools/wrapfunc.sh"
+[ -f "$HOME/path/to/tmux-watchdog-tools/wrapfunc.sh" ] && \
+    source "$HOME/path/to/tmux-watchdog-tools/wrapfunc.sh"
 ```
 
 Adjust the path to wherever you cloned the repo. Reopen your shell or run

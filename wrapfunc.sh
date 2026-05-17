@@ -55,9 +55,9 @@ wrap() {
         fi
 
         echo
-        echo "Usage: wrap new     — create new session for current directory"
-        echo "       wrap -r      — reattach to session in current directory"
-        echo "       wrap -d      — kill a session in current directory"
+        echo "Usage: wrap new     - create new session for current directory"
+        echo "       wrap -r      - reattach to session in current directory"
+        echo "       wrap -d      - kill a session in current directory"
         echo
         return 0
     fi

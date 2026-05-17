@@ -3,25 +3,25 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCK_DIR="$HERE/LOCKS"
+RETRY_SECS=3
+COOLDOWN_SECS=10
 mkdir -p "$LOCK_DIR"
 
-date
-
-display=$(tmux list-sessions -F '#{session_created} #{session_name}: #{session_windows} windows (created #{t:session_created})#{?session_attached, (attached),}' 2>/dev/null \
-    | sort -rn -k1,1 \
-    | cut -d' ' -f2-)
-
-if [ -z "$display" ]; then
-    echo "no tmux sessions"
-    sleep 3
-    exit 0
-fi
-
-echo "$display"
+status_output=$("$HERE/status.sh")
+clear
+printf '%s\n' "$status_output"
+echo ""
 
 names=$(tmux list-sessions -F '#{session_created} #{session_name}' 2>/dev/null \
     | sort -rn -k1,1 \
     | cut -d' ' -f2)
+
+if [ -z "$names" ]; then
+    printf "\033[0;90m[%s] retrying in ${RETRY_SECS}s - Ctrl-C to stop\033[0m\n" "$(date +%H:%M:%S)"
+    echo ""
+    sleep "$RETRY_SECS"
+    exit 0
+fi
 
 exec 3<&0
 
@@ -33,8 +33,14 @@ while IFS= read -r session; do
         tmux attach -t "$session" <&3
         exec 9>&-
         exec 3<&-
-        # detached: short random jitter (0-199ms) before next acquisition attempt
-        sleep "$(printf '0.%03d' $((RANDOM % 200)))"
+        # detached: cooldown so the user can break out of the loop
+        echo "Detached from $session."
+        echo ""
+        for i in $(seq "$COOLDOWN_SECS" -1 1); do
+            printf "\r\033[K\033[0;90m[%s] Attempting to attach to the next session in %ds - Ctrl-C to stop\033[0m" "$(date +%H:%M:%S)" "$i"
+            sleep 1
+        done
+        printf "\r\033[K"
         exit 0
     fi
     exec 9>&-
@@ -43,4 +49,8 @@ done <<< "$names"
 exec 3<&-
 
 # no session was free: wait longer before retrying
-sleep 3
+echo "All sessions already attached."
+echo ""
+printf "\033[0;90m[%s] retrying in ${RETRY_SECS}s - Ctrl-C to stop\033[0m\n" "$(date +%H:%M:%S)"
+echo ""
+sleep "$RETRY_SECS"

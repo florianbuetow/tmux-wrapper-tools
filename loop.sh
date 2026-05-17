@@ -9,6 +9,5 @@ if ! command -v flock >/dev/null 2>&1; then
 fi
 
 while true; do
-    clear
     "$HERE/auto-attach.sh"
 done
