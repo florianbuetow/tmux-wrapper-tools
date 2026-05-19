@@ -47,7 +47,7 @@ help:
     @echo ""
     @printf "\033[0;33mSetup & Lifecycle:\033[0m\n"
     @printf "  %-40s %s\n" "init" "Check prerequisites and create the lock folder"
-    @printf "  %-40s %s\n" "clean" "Remove lockfiles whose tmux session no longer exists"
+    @printf "  %-40s %s\n" "cleanup" "Remove lockfiles whose tmux session no longer exists"
     @printf "  %-40s %s\n" "help" "Show this help message"
     @echo ""
     @printf "\033[0;33mRun & Status:\033[0m\n"
@@ -77,13 +77,13 @@ init:
     echo ""
 
 # Remove lockfiles whose tmux session no longer exists
-clean:
+cleanup:
     @echo ""
     @printf "\033[0;34m=== Cleaning up stale lockfiles ===\033[0m\n"
     @echo ""
     @./cleanup.sh
     @echo ""
-    @printf "\033[0;32m✓ clean completed successfully\033[0m\n"
+    @printf "\033[0;32m✓ cleanup completed successfully\033[0m\n"
     @echo ""
 
 # Run the auto-attach loop

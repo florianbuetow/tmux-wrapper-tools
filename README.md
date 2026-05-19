@@ -16,13 +16,28 @@ Two small tmux helpers for managing many sessions at once:
 - `flock` (on macOS: `brew install flock`)
 - `just` (optional, for the `just` interface - on macOS: `brew install just`)
 
-## Usage
-
-Initialize once (verifies `flock` and creates `./LOCKS/`):
+## Install
 
 ```sh
+mkdir -p ~/scripts
+cd ~/scripts
+git clone https://github.com/florianbuetow/tmux-auto-attach.git
+cd tmux-auto-attach
 just init
 ```
+
+To launch `attach` and `status` from any terminal without changing directory,
+add these aliases to `~/.zshrc` (or `~/.bashrc`):
+
+```sh
+alias tmon='(cd ~/scripts/tmux-auto-attach && just attach)'
+alias tstat='(cd ~/scripts/tmux-auto-attach && just status)'
+```
+
+When the command exits you are returned to your original working directory.
+Reload your shell (`source ~/.zshrc`) and you're done.
+
+## Usage
 
 Run the watcher in a terminal:
 
@@ -121,12 +136,11 @@ tmux ls | grep '^WRAP-'
 `~/.zshrc`:
 
 ```sh
-[ -f "$HOME/path/to/tmux-auto-attach/wrapfunc.sh" ] && \
-    source "$HOME/path/to/tmux-auto-attach/wrapfunc.sh"
+[ -f "$HOME/scripts/tmux-auto-attach/wrapfunc.sh" ] && \
+    source "$HOME/scripts/tmux-auto-attach/wrapfunc.sh"
 ```
 
-Adjust the path to wherever you cloned the repo. Reopen your shell or run
-`source ~/.zshrc` to load the function.
+Reopen your shell or run `source ~/.zshrc` to load the function.
 
 ### Usage
 
